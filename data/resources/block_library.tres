@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BlockLibrary" load_steps=6 format=3 uid="uid://dx3xll5yg56le"]
+
+[ext_resource type="Script" uid="uid://cg8mnd5msuply" path="res://addons/deep_thought/core/blocks/block_type.gd" id="1_vjj52"]
+[ext_resource type="Resource" uid="uid://prr81csj8lvu" path="res://addons/deep_thought/data/resources/blocks/dirt.tres" id="2_6thhc"]
+[ext_resource type="Script" uid="uid://b8ehe2ko230l5" path="res://addons/deep_thought/core/blocks/block_library.gd" id="2_jismx"]
+[ext_resource type="Resource" uid="uid://b0vs0angdqojx" path="res://addons/deep_thought/data/resources/blocks/sand.tres" id="3_n7lje"]
+[ext_resource type="Resource" uid="uid://cp14yx5ghxp38" path="res://addons/deep_thought/data/resources/blocks/stone.tres" id="4_l7g07"]
+
+[resource]
+script = ExtResource("2_jismx")
+blocks = Array[ExtResource("1_vjj52")]([ExtResource("2_6thhc"), ExtResource("3_n7lje"), ExtResource("4_l7g07")])

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GeneratorPreset" load_steps=2 format=3 uid="uid://dcthnrku2om"]
+
+[ext_resource type="Script" uid="uid://5vlsle1stbgj" path="res://addons/deep_thought/core/generator/generator_preset.gd" id="1_nib0v"]
+
+[resource]
+script = ExtResource("1_nib0v")
+name = &"default"
+surface_block = &"dirt"
+subsoil_block = &"stone"
+top_layer_block = &"sand"
+surface_depth = 1
+subsoil_depth = 10
+metadata/_custom_type_script = "uid://5vlsle1stbgj"

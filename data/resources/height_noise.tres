@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="NoiseGenerator" load_steps=2 format=3 uid="uid://c7ghtj47csvu3"]
+
+[ext_resource type="Script" uid="uid://dyfu2bkb0ykg1" path="res://addons/deep_thought/core/generator/noise_generator.gd" id="1_6qj18"]
+
+[resource]
+script = ExtResource("1_6qj18")
+seed = 1337
+frequency = 0.04
+amplitude = 1.0
+offset = Vector2(0, 0)
+noise_type = 0
+fractal_type = 1
+octaves = 4
+lacunarity = 2.0
+gain = 0.5
+metadata/_custom_type_script = "uid://dyfu2bkb0ykg1"

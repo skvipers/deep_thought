@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BlockType" load_steps=3 format=3 uid="uid://b0vs0angdqojx"]
+
+[ext_resource type="Script" uid="uid://cg8mnd5msuply" path="res://addons/deep_thought/core/blocks/block_type.gd" id="1_cn4o8"]
+[ext_resource type="Texture2D" uid="uid://cx6chkuuwx11j" path="res://addons/deep_thought/data/resources/textures/sand.png" id="2_n08w6"]
+
+[resource]
+script = ExtResource("1_cn4o8")
+name = "sand"
+texture = ExtResource("2_n08w6")
+is_solid = true
+is_transparent = false
+color = Color(0.986847, 0.909689, 0.743351, 1)
+allow_grass_overlay = false
+is_surface_candidate = false
+allowed_overlays = Array[int]([])
+natural_overlay_chance = 0.0
+overlay_anchor_points = 0
+base_roughness = 1.0
+base_metallic = 0.0
+receives_shadows_through_overlays = true
+overlay_blend_mode = 0
+biome_tint_strength = 1.0
+seasonal_variations = false
