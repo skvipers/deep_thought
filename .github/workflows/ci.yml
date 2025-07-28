@@ -1,0 +1,119 @@
+name: CI - Deep Thought Addon
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test Addon
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Godot
+      uses: godotengine/godot-ci-action@v1
+      with:
+        version: 4.4.1
+        platform: linux
+        target: editor
+        cache: true
+        
+    - name: Check GDScript syntax
+      run: |
+        echo "Checking GDScript syntax..."
+        find . -name "*.gd" -type f | while read file; do
+          echo "Checking $file"
+          godot --headless --check-only "$file" || exit 1
+        done
+        
+    - name: Validate project structure
+      run: |
+        echo "Validating project structure..."
+        # Check if required files exist
+        test -f "plugin.cfg" || (echo "Missing plugin.cfg" && exit 1)
+        test -f "deep_thought.gd" || (echo "Missing deep_thought.gd" && exit 1)
+        test -d "core" || (echo "Missing core directory" && exit 1)
+        test -d "utils" || (echo "Missing utils directory" && exit 1)
+        echo "✅ Project structure is valid"
+        
+    - name: Check file sizes
+      run: |
+        echo "Checking file sizes..."
+        # Check for files larger than 50MB (GitHub limit)
+        find . -type f -size +50M | while read file; do
+          echo "⚠️  Large file detected: $file"
+          echo "Consider using Git LFS for files larger than 50MB"
+        done
+        
+    - name: Validate plugin configuration
+      run: |
+        echo "Validating plugin.cfg..."
+        if grep -q "name=" plugin.cfg; then
+          echo "✅ Plugin name found"
+        else
+          echo "❌ Plugin name missing"
+          exit 1
+        fi
+        
+    - name: Check for common issues
+      run: |
+        echo "Checking for common issues..."
+        # Check for TODO comments in production code
+        if grep -r "TODO" . --include="*.gd" | grep -v "test"; then
+          echo "⚠️  TODO comments found in production code"
+        fi
+        # Check for print statements (should use Logger)
+        if grep -r "print(" . --include="*.gd" | grep -v "test"; then
+          echo "⚠️  print() statements found (consider using Logger)"
+        fi
+        
+    - name: Run basic tests
+      run: |
+        echo "Running basic tests..."
+        # Create a minimal test project
+        mkdir -p test_project
+        cd test_project
+        
+        # Create project.godot
+        cat > project.godot << EOF
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Test Project"
+run/main_scene=""
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+EOF
+        
+        # Copy addon to test project
+        cp -r ../addons test_project/
+        
+        # Test if project loads without errors
+        godot --headless --check-only || exit 1
+        echo "✅ Project loads successfully"
+        
+    - name: Report success
+      run: |
+        echo "🎉 All tests passed!"
+        echo "✅ GDScript syntax is valid"
+        echo "✅ Project structure is correct"
+        echo "✅ Plugin configuration is valid"
+        echo "✅ Project loads without errors" 
