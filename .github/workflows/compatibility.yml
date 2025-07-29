@@ -19,9 +19,13 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Setup Godot ${{ matrix.godot-version }}
-      uses: godotengine/setup-godot@v1
-      with:
-        godot-version: ${{ matrix.godot-version }}
+      run: |
+        echo "Setting up Godot ${{ matrix.godot-version }}..."
+        wget -q https://github.com/godotengine/godot/releases/download/${{ matrix.godot-version }}-stable/Godot_v${{ matrix.godot-version }}-stable_linux.x86_64.zip
+        unzip Godot_v${{ matrix.godot-version }}-stable_linux.x86_64.zip
+        chmod +x Godot_v${{ matrix.godot-version }}-stable_linux.x86_64
+        sudo mv Godot_v${{ matrix.godot-version }}-stable_linux.x86_64 /usr/local/bin/godot
+        echo "Godot ${{ matrix.godot-version }} installed successfully"
         
     - name: Test compatibility
       run: |
