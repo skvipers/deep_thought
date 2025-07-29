@@ -2,6 +2,7 @@ extends WorldBase
 class_name WorldPreview
 
 const TAG := "WorldPreview"
+const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
 const OverlayManagerFactory = preload("res://addons/deep_thought/core/factories/OverlayManagerFactory.gd")
 const ChunkFactory = preload("res://addons/deep_thought/core/factories/ChunkFactory.gd")
 
@@ -41,7 +42,7 @@ func _ready():
 	var editor = ChunkEditor.new()
 	editor.name = "GlobalChunkEditor"
 	add_child(editor)
-	print("ChunkEditor добавлен в сцену")
+	Logger.info("EDITOR", "ChunkEditor добавлен в сцену")
 	
 	# ПОТОМ создаем чанки (теперь overlay_manager уже существует!)
 	for x in range(-chunk_range.x, chunk_range.x + 1):

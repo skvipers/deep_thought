@@ -11,13 +11,13 @@ static func setup_logging() -> void:
 	
 	if performance_mode:
 		Logger.setup_for_performance()
-		print("Logging: PERFORMANCE mode - only ERROR level")
+		Logger.info("SYSTEM", "Logging: PERFORMANCE mode - only ERROR level")
 	elif debug_mode:
 		Logger.setup_for_development()
-		print("Logging: DEVELOPMENT mode - all levels enabled")
+		Logger.info("SYSTEM", "Logging: DEVELOPMENT mode - all levels enabled")
 	else:
 		Logger.setup_for_release()
-		print("Logging: RELEASE mode - WARN and ERROR only")
+		Logger.info("SYSTEM", "Logging: RELEASE mode - WARN and ERROR only")
 
 # Методы для ручного управления логированием
 static func enable_generation_logs() -> void:
