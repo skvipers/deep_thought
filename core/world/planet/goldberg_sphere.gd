@@ -1,5 +1,7 @@
 extends MeshInstance3D
 
+const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
+
 # Сигналы для UI
 signal tile_selected(tile_data: Dictionary)
 signal tile_deselected()
@@ -68,7 +70,7 @@ func update_camera_position():
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 
 func generate_correct_sphere():
-	print("Генерация правильной сферы Голдберга...")
+	Logger.info("WORLD", "Генерация правильной сферы Голдберга...")
 
 	var geometry_data = GoldbergGeometry.generate_goldberg_sphere_correct(subdivisions, radius)
 	if planet:
@@ -78,7 +80,7 @@ func generate_correct_sphere():
 	hex_neighbors = geometry_data.hex_neighbors
 	hex_boundaries = geometry_data.hex_boundaries
 
-	print("Создано ", hex_centers.size(), " гексагональных тайлов")
+	Logger.info("WORLD", "Создано " + str(hex_centers.size()) + " гексагональных тайлов")
 
 	create_hex_visualization()
 
@@ -207,7 +209,7 @@ func create_correct_wireframe():
 			vertex_count += 2
 
 	_create_wireframe_mesh(line_vertices, line_indices)
-	print("Создан wireframe с ", line_vertices.size() / 2.0, " линиями")
+	Logger.info("WORLD", "Создан wireframe с " + str(line_vertices.size() / 2.0) + " линиями")
 
 func _create_wireframe_mesh(vertices: PackedVector3Array, indices: PackedInt32Array):
 	var surface_array := []
@@ -283,14 +285,14 @@ func _update_highlighted_tile(tile_id: int):
 	update_tile_color(tile_id, Color.YELLOW)
 
 func _print_debug_info(hit_position: Vector3, local_hit: Vector3, projected: Vector3, tile_id: int):
-	print("\n=== ОТЛАДКА ВЫБОРА ТАЙЛА ===")
-	print("Мировая точка попадания:", hit_position)
-	print("Локальная точка попадания:", local_hit)
-	print("Проецированная точка:", projected)
-	print("Выбран тайл ID:", tile_id)
+	Logger.debug("WORLD", "=== ОТЛАДКА ВЫБОРА ТАЙЛА ===")
+	Logger.debug("WORLD", "Мировая точка попадания: " + str(hit_position))
+	Logger.debug("WORLD", "Локальная точка попадания: " + str(local_hit))
+	Logger.debug("WORLD", "Проецированная точка: " + str(projected))
+	Logger.debug("WORLD", "Выбран тайл ID: " + str(tile_id))
 	
 	var distance = hex_centers[tile_id].distance_to(projected)
-	print("Расстояние до центра:", distance)
+	Logger.debug("WORLD", "Расстояние до центра: " + str(distance))
 	
 	print_tile_info(tile_id)
 
@@ -442,11 +444,11 @@ func update_tile_color(tile_id: int, new_color: Color):
 	array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 
 func print_tile_info(tile_id: int):
-	print("\n--- ИНФОРМАЦИЯ О ТАЙЛЕ ---")
-	print("ID тайла:", tile_id)
+	Logger.debug("WORLD", "--- ИНФОРМАЦИЯ О ТАЙЛЕ ---")
+	Logger.debug("WORLD", "ID тайла: " + str(tile_id))
 	
 	if not planet or tile_id < 0 or tile_id >= planet.tiles.size():
-		print("Тайл не найден или индекс вне диапазона")
+		Logger.warn("WORLD", "Тайл не найден или индекс вне диапазона")
 		return
 
 	var tile = planet.tiles[tile_id]
@@ -456,18 +458,18 @@ func print_tile_info(tile_id: int):
 		biome_name = tile.biome.name
 		biome_color = tile.biome.color
 
-	print("Биом:", biome_name)
-	print("Цвет биома:", biome_color)
-	print("Позиция центра:", hex_centers[tile_id])
-	print("Соседи:", tile.neighbors)
-	print("Количество соседей:", tile.neighbors.size())
+	Logger.debug("WORLD", "Биом: " + str(biome_name))
+	Logger.debug("WORLD", "Цвет биома: " + str(biome_color))
+	Logger.debug("WORLD", "Позиция центра: " + str(hex_centers[tile_id]))
+	Logger.debug("WORLD", "Соседи: " + str(tile.neighbors))
+	Logger.debug("WORLD", "Количество соседей: " + str(tile.neighbors.size()))
 	
 	# Проверка границ
 	if hex_boundaries.has(tile_id):
 		var boundary = hex_boundaries[tile_id]
-		print("Вершин границы:", boundary.size())
+		Logger.debug("WORLD", "Вершин границы: " + str(boundary.size()))
 		if boundary.size() > 0:
-			print("Первая вершина границы:", boundary[0])
+			Logger.debug("WORLD", "Первая вершина границы: " + str(boundary[0]))
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -512,7 +514,7 @@ func _unhandled_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var camera := get_viewport().get_camera_3d()
 		if camera == null:
-			print("Камера не найдена")
+			Logger.warn("WORLD", "Камера не найдена")
 			return
 
 		var from = camera.project_ray_origin(event.position)
@@ -526,5 +528,5 @@ func _unhandled_input(event):
 		if result and result.has("position"):
 			highlight_tile_by_position(result.position)
 		else:
-			print("Нет попадания по планете")
+			Logger.debug("WORLD", "Нет попадания по планете")
 			_handle_no_hit()
