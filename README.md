@@ -31,7 +31,7 @@ A comprehensive Godot 4 addon for procedural world generation, pawn management, 
 ### As Git Submodule
 ```bash
 # In your Godot project
-git submodule add https://github.com/your-username/deep_thought_addon.git addons/deep_thought
+git submodule add https://github.com/skvipers/deep_thought.git addons/deep_thought
 git submodule update --init --recursive
 ```
 
@@ -76,6 +76,36 @@ world.set_generator(generator)
 3. Make your changes
 4. Submit a pull request
 
-## License
+## 📜 License
 
-MIT License - see LICENSE file for details. 
+This project is licensed under the [MIT License](LICENSE).  
+You are free to use it in both personal and commercial projects.
+
+However...
+
+---
+
+## 🏢 Commercial Use Requires Sponsorship (Ethical Model)
+
+If you're an **individual or indie dev** using this in a personal or open-source project — enjoy! ❤️
+
+If you're a **company or using this framework in a commercial product**, please consider **supporting the project**.  
+This is not a legal requirement, but a request for fairness.
+
+Your sponsorship helps us:
+
+- Continue active development and maintenance
+- Add new features and compatibility for future versions of Godot
+- Provide documentation and examples
+- Stay motivated as developers 🌱
+
+### 👉 [Patreon](https://patreon.com/deepthoughtgodot)  
+or  
+### 📬 Contact for custom licensing/support: skvipers@gmail.com
+
+---
+
+## ❤️ Contributing
+
+Contributions are welcome!  
+By submitting a pull request, you agree to license your code under the same MIT terms as the rest of the project. 
