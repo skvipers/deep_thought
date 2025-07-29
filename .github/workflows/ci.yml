@@ -16,12 +16,9 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Setup Godot
-      uses: godotengine/godot-ci-action@v1
+      uses: godotengine/setup-godot@v1
       with:
-        version: 4.4.1
-        platform: linux
-        target: editor
-        cache: true
+        godot-version: 4.4.1
         
     - name: Check GDScript syntax
       run: |
@@ -80,28 +77,16 @@ jobs:
         cd test_project
         
         # Create project.godot
-        cat > project.godot << EOF
-; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
-
-config_version=5
-
-[application]
-
-config/name="Test Project"
-run/main_scene=""
-config/features=PackedStringArray("4.4", "GL Compatibility")
-config/icon="res://icon.svg"
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-EOF
+        echo "config_version=5" > project.godot
+        echo "" >> project.godot
+        echo "[application]" >> project.godot
+        echo "config/name=\"Test Project\"" >> project.godot
+        echo "run/main_scene=\"\"" >> project.godot
+        echo "config/features=PackedStringArray(\"4.4\", \"GL Compatibility\")" >> project.godot
+        echo "config/icon=\"res://icon.svg\"" >> project.godot
+        echo "" >> project.godot
+        echo "[rendering]" >> project.godot
+        echo "renderer/rendering_method=\"gl_compatibility\"" >> project.godot
         
         # Copy addon to test project
         cp -r ../addons test_project/
