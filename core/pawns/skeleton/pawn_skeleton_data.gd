@@ -56,48 +56,6 @@ func add_attachment(attachment: AttachmentData):
 	attachments.append(attachment)
 	Logger.debug("PAWN", "Added attachment: " + attachment.part_name + " -> " + attachment.bone_name)
 
-func create_humanoid_skeleton() -> PawnSkeletonData:
-	"""Creates basic humanoid skeleton"""
-	var skeleton = PawnSkeletonData.new()
-	Logger.info("PAWN", "Creating humanoid skeleton")
-	
-	# Simple bones
-	var head_bone = UnifiedBoneData.new()
-	head_bone.setup_simple_bone("head", "head", "head/head_mesh")
-	skeleton.add_bone(head_bone)
-	
-	var torso_bone = UnifiedBoneData.new()
-	torso_bone.setup_simple_bone("torso", "torso", "torso/torso_mesh", ["chest", "waist"])
-	skeleton.add_bone(torso_bone)
-	
-	# Skeletal bones
-	var left_arm_bone = UnifiedBoneData.new()
-	left_arm_bone.setup_skeleton_bone("left_arm", "left_arm/ArmSkeleton", "left_arm/ArmSkeleton/left_arm_mesh", ["Shoulder", "Elbow"])
-	skeleton.add_bone(left_arm_bone)
-	
-	var right_arm_bone = UnifiedBoneData.new()
-	right_arm_bone.setup_skeleton_bone("right_arm", "right_arm/ArmSkeleton", "right_arm/ArmSkeleton/right_arm_mesh", ["Shoulder", "Elbow"])
-	skeleton.add_bone(right_arm_bone)
-	
-	var left_leg_bone = UnifiedBoneData.new()
-	left_leg_bone.setup_skeleton_bone("left_leg", "left_leg/LegSkeleton", "left_leg/LegSkeleton/left_leg_mesh", ["Hip", "Knee"])
-	skeleton.add_bone(left_leg_bone)
-	
-	var right_leg_bone = UnifiedBoneData.new()
-	right_leg_bone.setup_skeleton_bone("right_leg", "right_leg/LegSkeleton", "right_leg/LegSkeleton/right_leg_mesh", ["Hip", "Knee"])
-	skeleton.add_bone(right_leg_bone)
-	
-	# Body part attachments
-	skeleton.add_attachment(AttachmentData.new("head", "head", Vector3.ZERO, Vector3.ZERO))
-	skeleton.add_attachment(AttachmentData.new("torso", "torso", Vector3.ZERO, Vector3.ZERO))
-	skeleton.add_attachment(AttachmentData.new("left_arm", "left_arm", Vector3.ZERO, Vector3.ZERO))
-	skeleton.add_attachment(AttachmentData.new("right_arm", "right_arm", Vector3.ZERO, Vector3.ZERO))
-	skeleton.add_attachment(AttachmentData.new("left_leg", "left_leg", Vector3.ZERO, Vector3.ZERO))
-	skeleton.add_attachment(AttachmentData.new("right_leg", "right_leg", Vector3.ZERO, Vector3.ZERO))
-	
-	Logger.info("PAWN", "Humanoid skeleton created with " + str(skeleton.bones.size()) + " bones and " + str(skeleton.attachments.size()) + " attachments")
-	return skeleton
-
 func print_skeleton_info():
 	"""Prints skeleton structure information"""
 	Logger.info("PAWN", "=== Skeleton Information ===")

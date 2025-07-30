@@ -1,4 +1,4 @@
-extends Node3D
+extends CharacterBody3D
 class_name Pawn
 
 const Prosthesis = preload("res://addons/deep_thought/core/pawns/parts/prosthesis.gd")

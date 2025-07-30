@@ -94,4 +94,4 @@ func print_info():
 		Logger.debug("PAWN", "Child bones: " + str(child_bones))
 	elif bone_type == BoneType.SKELETON: 
 		Logger.debug("PAWN", "Skeleton path: " + skeleton_path)
-		Logger.debug("PAWN", "Joints: " + str(joint_names))
+		Logger.debug("PAWN", "Joints: " + str(joint_names)) 

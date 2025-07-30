@@ -48,7 +48,6 @@ func _enter_tree():
 	add_custom_type("PawnSkeletonData", "Resource", preload("res://addons/deep_thought/core/pawns/skeleton/pawn_skeleton_data.gd"), preload("res://icon.svg"))
 	add_custom_type("AttachmentData", "Resource", preload("res://addons/deep_thought/core/pawns/skeleton/attachment_data.gd"), preload("res://icon.svg"))
 	add_custom_type("UnifiedBoneData", "Resource", preload("res://addons/deep_thought/core/pawns/skeleton/unified_bone_data.gd"), preload("res://icon.svg"))
-	add_custom_type("AutoSkeletonController", "Node3D", preload("res://addons/deep_thought/core/pawns/skeleton/auto_skeleton_controller.gd"), preload("res://icon.svg"))
 	
 	add_custom_type("ChunkEditor", "Node", preload("res://addons/deep_thought/editor/chunk_editor.gd"), preload("res://icon.svg"))
 	add_custom_type("FlyCamera", "Camera3D", preload("res://addons/deep_thought/utils/fly_camera.gd"), preload("res://icon.svg"))
