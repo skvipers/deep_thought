@@ -15,24 +15,27 @@ A flexible, modular priority system for colony simulation games like RimWorld or
 ## Quick Start
 
 ```gdscript
-# Setup priority manager
-var priority_manager = PriorityManager.new()
-add_child(priority_manager)
+# Setup command dispatcher
+var dispatcher = CommandDispatcher.new()
+add_child(dispatcher)
 
 # Add pawns to workforce
-priority_manager.add_pawn(pawn1)
-priority_manager.add_pawn(pawn2)
+dispatcher.add_pawn(pawn1)
+dispatcher.add_pawn(pawn2)
 
 # Register job types (optional - use DefaultJobTypes for demo)
 DefaultJobTypes.initialize_default_job_types()
 
 # Create and add tasks
-var construction_task = ConstructionTask.new("House", 4)
-priority_manager.add_task(construction_task)
+var construction_task = ExampleCommands.create_construction_task("Build House", 4, Vector3.ZERO, "house")
+dispatcher.add_task(construction_task)
 
 # Set pawn priorities
 pawn.set_job_priority("construction", 4)  # Above normal
 pawn.set_job_priority("cleaning", 1)     # Low priority
+
+# Process assignments
+dispatcher.process_assignments()
 ```
 
 ## Files
@@ -43,11 +46,16 @@ pawn.set_job_priority("cleaning", 1)     # Low priority
 - `priority_component.gd` - Node component for world objects
 - `work_task.gd` - Task/work order system
 - `priority_manager.gd` - Central task assignment and management
+- `global_job_queue.gd` - Central queue of all tasks
+- `command_queue.gd` - Per-pawn task queue
+- `command_dispatcher.gd` - Connects global queue and pawns
+- `immediate_command.gd` - Tasks that execute without pawns
+- `example_commands.gd` - Example task implementations
 - `PRIORITY_SYSTEM.md` - Comprehensive documentation
 
 ## Testing
 
-Use the test scene `test/PrioritySystemTest.tscn` to test the priority system functionality.
+Use the test scene `test/SimplePriorityTest.tscn` to test the priority system functionality.
 
 ## Core Concepts
 
@@ -79,7 +87,7 @@ Final Priority = pawn_priority * base_priority + boost_priority
 
 ## Usage Examples
 
-### Creating Work Tasks
+### Creating Tasks
 ```gdscript
 # Register job types first
 PrioritySystem.set_priority_scale(1, 5, 3)
@@ -91,16 +99,16 @@ PrioritySystem.register_job_type("mining", "Mining", 4)
 DefaultJobTypes.initialize_default_job_types()
 
 # Construction task
-var construction_task = ConstructionTask.new("House", 4)
-priority_manager.add_task(construction_task)
+var construction_task = ExampleCommands.create_construction_task("Build House", 4, Vector3.ZERO, "house")
+dispatcher.add_task(construction_task)
 
 # Medical task (high priority)
-var medical_task = MedicalTask.new(wounded_pawn, "Heal Wounds", 5)
-priority_manager.add_task(medical_task)
+var medical_task = ExampleCommands.create_medical_task("Heal Wounds", 5, wounded_pawn, "bandage")
+dispatcher.add_task(medical_task)
 
 # Mining task
-var mining_task = MiningTask.new("Iron", mine_location, 4)
-priority_manager.add_task(mining_task)
+var mining_task = ExampleCommands.create_mining_task("Mine Iron", 4, mine_location, "iron")
+dispatcher.add_task(mining_task)
 ```
 
 ### Setting Pawn Priorities
@@ -123,10 +131,21 @@ building.add_child(priority_component)
 ### Dynamic Priority Adjustments
 ```gdscript
 # Add urgency boost to medical tasks
-priority_manager.add_priority_boost_to_job_type("medical", 10)
+medical_task.add_priority_boost(10)
 
 # Add boost to specific task
 medical_task.add_priority_boost(5)
+```
+
+### Immediate Tasks
+```gdscript
+# Create immediate task (no pawn required)
+var toggle_task = ImmediateCommand.create_toggle_command("Toggle Light", light_switch, "is_on")
+dispatcher.execute_immediate_task(toggle_task)
+
+# Create flag setting task
+var flag_task = ImmediateCommand.create_flag_command("Set Alert", game_state, "alert_level", 3)
+dispatcher.execute_immediate_task(flag_task)
 ```
 
 ## Integration
@@ -171,12 +190,18 @@ class CustomPrioritizable extends Prioritizable:
 ### Custom Tasks
 ```gdscript
 class CustomTask extends WorkTask:
-    func _init(task_job_type: String, task_priority: int):
-        super._init(task_job_type, task_priority)
+    func _init(cmd_job_type: String, cmd_priority: int):
+        super._init(cmd_job_type, cmd_priority)
         description = "Custom task"
     
-    func has_required_skills(pawn) -> bool:
-        return pawn.get_skill_level("custom_skill") >= 1
+    func execute(pawn):
+        if not can_be_executed_by(pawn):
+            fail()
+            return
+        
+        start_execution()
+        # Implement custom behavior here
+        complete()
 ```
 
 ## Best Practices

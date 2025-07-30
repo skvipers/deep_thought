@@ -35,6 +35,10 @@ var description: String = ""
 var requirements: Dictionary = {}
 ## Task progress (0.0 to 1.0)
 var progress: float = 0.0
+## Manual flag - true if assigned by player
+var is_manual: bool = false
+## Immediate flag - true if task executes without pawn involvement
+var is_immediate: bool = false
 
 func _init(task_job_type: String, task_base_priority: int = PrioritySystem.priority_scale_default):
 	job_type = task_job_type
@@ -75,6 +79,10 @@ func start_work():
 		state = TaskState.IN_PROGRESS
 		start_time = Time.get_ticks_msec()
 
+## Start executing task (alias for start_work for compatibility)
+func start_execution():
+	start_work()
+
 ## Complete task
 func complete():
 	state = TaskState.COMPLETED
@@ -107,6 +115,10 @@ func can_be_worked_by(pawn) -> bool:
 	
 	# Check if pawn has required skills
 	return has_required_skills(pawn)
+
+## Check if task can be executed by pawn (alias for can_be_worked_by for compatibility)
+func can_be_executed_by(pawn) -> bool:
+	return can_be_worked_by(pawn)
 
 ## Check specific requirement
 func check_requirement(pawn, requirement: String, value) -> bool:
@@ -154,6 +166,26 @@ func get_description() -> String:
 ## Get priority string for UI
 func get_priority_string() -> String:
 	return "Priority: " + str(get_total_priority(null)) + " (Base: " + str(base_priority) + ", Boost: " + str(boost_priority) + ")"
+
+## Execute task (standard - requires pawn)
+func execute(pawn):
+	if not can_be_executed_by(pawn):
+		fail()
+		return
+	
+	start_execution()
+	# Override in subclasses to implement specific behavior
+	complete()
+
+## Execute task directly (immediate - no pawn required)
+func execute_direct():
+	if not is_immediate:
+		fail()
+		return
+	
+	start_execution()
+	# Override in subclasses to implement specific behavior
+	complete()
 
 ## Get state string for UI
 func get_state_string() -> String:
