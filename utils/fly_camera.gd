@@ -4,6 +4,7 @@ class_name FlyCamera
 @export var move_speed: float = 20.0
 @export var mouse_sensitivity: float = 0.002
 @export var boost_multiplier: float = 3.0
+@export var input_enabled: bool = true
 
 var velocity := Vector3.ZERO
 
@@ -11,6 +12,9 @@ func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _input(event):
+	if not input_enabled:
+		return
+		
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		rotate_object_local(Vector3.RIGHT, -event.relative.y * mouse_sensitivity)
@@ -22,6 +26,9 @@ func _input(event):
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta):
+	if not input_enabled:
+		return
+		
 	var input_vector := Vector3.ZERO
 	
 	# Движение
@@ -50,3 +57,11 @@ func _physics_process(delta):
 	
 	# Применяем движение
 	position += velocity * delta
+
+func set_input_enabled(enabled: bool):
+	"""Enable or disable camera input"""
+	input_enabled = enabled
+
+func is_input_enabled() -> bool:
+	"""Check if camera input is enabled"""
+	return input_enabled
