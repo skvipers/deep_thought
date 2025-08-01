@@ -38,11 +38,12 @@ func _ready():
 	add_child(overlay_manager)
 	Logger.info("GENERATION", "OverlayManager created")
 	
-	# Добавляем редактор блоков глобально
-	var editor = ChunkEditor.new()
-	editor.name = "GlobalChunkEditor"
-	add_child(editor)
-	Logger.info("EDITOR", "ChunkEditor добавлен в сцену")
+	if edit_enabled:
+		# Добавляем редактор блоков глобально
+		var editor = ChunkEditor.new()
+		editor.name = "GlobalChunkEditor"
+		add_child(editor)
+		Logger.info("EDITOR", "ChunkEditor добавлен в сцену")
 	
 	# ПОТОМ создаем чанки (теперь overlay_manager уже существует!)
 	for x in range(-chunk_range.x, chunk_range.x + 1):

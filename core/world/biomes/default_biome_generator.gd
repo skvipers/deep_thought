@@ -14,7 +14,14 @@ func generate_biomes(tiles: Array, config: Resource) -> void:
 
 	var unassigned := tiles.duplicate()
 	var rng = RandomNumberGenerator.new()
-	rng.randomize()
+	
+	# Используем seed из конфигурации планеты
+	if planet_config.seed != 0:
+		rng.seed = planet_config.seed
+		Logger.info(TAG, "Using seed from config: " + str(planet_config.seed) + " (from string: '" + planet_config.seed_string + "')")
+	else:
+		rng.randomize()
+		Logger.info(TAG, "Using random seed (no seed specified)")
 
 	while not unassigned.is_empty():
 		var tile: CustomTileData = unassigned.pop_back()

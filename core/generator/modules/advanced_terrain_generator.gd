@@ -21,6 +21,8 @@ func generate_chunk(buffer: MapBuffer, context: GenerationContext, chunk_pos: Ve
 		return
 
 	var biome = tile_data.biome if tile_data and tile_data.biome else null
+	
+	Logger.debug(TAG, "Generating chunk with biome: %s" % (biome.name if biome else "None"))
 
 	# Override noise parameters if defined in biome
 	if biome and biome.noise_override:

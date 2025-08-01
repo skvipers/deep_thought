@@ -204,3 +204,27 @@ func get_state_string() -> String:
 			return "Cancelled"
 		_:
 			return "Unknown"
+
+## Check if task is in progress
+func is_in_progress() -> bool:
+	return state == TaskState.IN_PROGRESS
+
+## Check if task is completed
+func is_completed() -> bool:
+	return state == TaskState.COMPLETED
+
+## Check if task is failed
+func is_failed() -> bool:
+	return state == TaskState.FAILED
+
+## Check if task is cancelled
+func is_cancelled() -> bool:
+	return state == TaskState.CANCELLED
+
+## Check if task is pending
+func is_pending() -> bool:
+	return state == TaskState.PENDING
+
+## Check if task is assigned
+func is_assigned() -> bool:
+	return state == TaskState.ASSIGNED

@@ -3,10 +3,14 @@ class_name ChunkRenderer
 
 const TAG := "ChunkRenderer"
 
+# Импорт конфигурации
+const ChunkRendererConfig = preload("res://addons/deep_thought/core/world/chunk_renderer_config.gd")
+
 @export var block_library: BlockLibrary
 @export var buffer: MapBuffer
 @export var chunk_size: Vector3i = Vector3i(16, 16, 16)
 @export var debug_output: bool = false
+@export var config: ChunkRendererConfig
 
 var mesh_instance: MeshInstance3D
 var needs_rebuild: bool = false
@@ -65,6 +69,8 @@ func validate_dependencies() -> bool:
 	if not block_library:
 		Logger.error(TAG, "BlockLibrary not assigned to ChunkRenderer")
 		return false
+	if not config:
+		Logger.warn(TAG, "ChunkRendererConfig not assigned to ChunkRenderer - using fallback values")
 	return true
 
 func rebuild_mesh():
@@ -151,11 +157,13 @@ func create_mesh_for_texture_group(group: Dictionary, texture_key):
 		if has_overlays:
 			# Заменяем на шейдерный материал
 			var shader_mat = ShaderMaterial.new()
-			shader_mat.shader = load("res://addons/deep_thought/shaders/overlay_shader.gdshader")
+			if config and config.get_overlay_shader():
+				shader_mat.shader = config.get_overlay_shader()
 			if group["texture"] != null:
 				shader_mat.set_shader_parameter("base_texture", group["texture"])
-			var grass_texture = load("res://addons/deep_thought/data/resources/textures/grass_top.png")
-			shader_mat.set_shader_parameter("grass_texture", grass_texture)
+			var grass_texture = config.get_grass_texture() if config else null
+			if grass_texture:
+				shader_mat.set_shader_parameter("grass_texture", grass_texture)
 			
 			# Временный атлас оверлеев (можно расширить позже)
 			#var overlay_atlas = create_temporary_overlay_atlas(group["texture"])
@@ -371,6 +379,7 @@ func create_simple_biome_gradient() -> ImageTexture:
 	texture.set_image(image)
 	return texture
 
+# Константы атласа (будут заменены на конфигурацию)
 const OVERLAY_ATLAS_SIZE = 512  # Размер атласа
 const OVERLAY_TILE_SIZE = 128   # Размер одного тайла
 const OVERLAY_ATLAS_TILES = 4   # 4x4 = 16 текстур максимум
@@ -382,7 +391,7 @@ const OVERLAY_TYPE_TO_INDEX = {
 	# Можно добавлять новые типы
 }
 
-# Пути к текстурам оверлеев по индексам
+# Пути к текстурам оверлеев по индексам (будут заменены на конфигурацию)
 const OVERLAY_TEXTURE_PATHS = {
 	1: "res://addons/deep_thought/data/resources/textures/leaves_transparent.png",
 	2: "res://addons/deep_thought/data/resources/textures/track_straight.png",
@@ -408,37 +417,51 @@ func create_overlay_atlas(base_texture: Texture2D) -> ImageTexture:
 		base_image.decompress()
 	base_image.convert(Image.FORMAT_RGBA8)
 	
+	# Получаем размеры из конфигурации или используем константы
+	var atlas_size = config.overlay_atlas_size if config else OVERLAY_ATLAS_SIZE
+	var tile_size = config.overlay_tile_size if config else OVERLAY_TILE_SIZE
+	var atlas_tiles = config.overlay_atlas_tiles if config else OVERLAY_ATLAS_TILES
+	
 	# Создаем атлас
-	var atlas_image = Image.create(OVERLAY_ATLAS_SIZE, OVERLAY_ATLAS_SIZE, false, Image.FORMAT_RGBA8)
+	var atlas_image = Image.create(atlas_size, atlas_size, false, Image.FORMAT_RGBA8)
 	atlas_image.fill(Color(0, 0, 0, 0))  # Прозрачный фон
 
-	Logger.debug(TAG, "Created empty overlay atlas %dx%d" % [OVERLAY_ATLAS_SIZE, OVERLAY_ATLAS_SIZE])	
+	Logger.debug(TAG, "Created empty overlay atlas %dx%d" % [atlas_size, atlas_size])	
 	
 	# Позиция 0 (верхний левый) - базовая текстура блока
 	var resized_base = base_image.duplicate()
-	if resized_base.get_width() != OVERLAY_TILE_SIZE or resized_base.get_height() != OVERLAY_TILE_SIZE:
-		resized_base.resize(OVERLAY_TILE_SIZE, OVERLAY_TILE_SIZE)
-	atlas_image.blit_rect(resized_base, Rect2i(0, 0, OVERLAY_TILE_SIZE, OVERLAY_TILE_SIZE), Vector2i(0, 0))
+	if resized_base.get_width() != tile_size or resized_base.get_height() != tile_size:
+		resized_base.resize(tile_size, tile_size)
+	atlas_image.blit_rect(resized_base, Rect2i(0, 0, tile_size, tile_size), Vector2i(0, 0))
 	
 	Logger.debug(TAG, "Added base texture to atlas at (0, 0)")
 	
 	# Добавляем текстуры оверлеев
 	var loaded_overlays = 0
-	for overlay_index in OVERLAY_TEXTURE_PATHS.keys():
-		var texture_path = OVERLAY_TEXTURE_PATHS[overlay_index]
+	var overlay_textures = config.overlay_textures if config else OVERLAY_TEXTURE_PATHS
+	
+	for overlay_index in overlay_textures.keys():
+		var overlay_texture = null
 		
-		if not ResourceLoader.exists(texture_path):
-			Logger.warn(TAG, "Overlay texture not found: %s" % texture_path)
-			continue
+		if config:
+			# Убеждаемся что индекс - это int
+			var index = overlay_index
+			if overlay_index is String:
+				index = overlay_index.to_int()
+			overlay_texture = config.get_overlay_texture(index)
+		else:
+			# Fallback к старому способу
+			var texture_path = overlay_textures[overlay_index]
+			if ResourceLoader.exists(texture_path):
+				overlay_texture = load(texture_path)
 		
-		var overlay_texture = load(texture_path)
 		if not overlay_texture or not overlay_texture is Texture2D:
-			Logger.warn(TAG, "Failed to load overlay texture: %s" % texture_path)
+			Logger.warn(TAG, "Failed to load overlay texture for index: %d" % overlay_index)
 			continue
 		
 		var overlay_image = overlay_texture.get_image()
 		if not overlay_image:
-			Logger.warn(TAG, "Failed to get image from overlay texture: %s" % texture_path)
+			Logger.warn(TAG, "Failed to get image from overlay texture for index: %d" % overlay_index)
 			continue
 		
 		# Подготавливаем изображение оверлея
@@ -448,17 +471,17 @@ func create_overlay_atlas(base_texture: Texture2D) -> ImageTexture:
 			overlay_image.convert(Image.FORMAT_RGBA8)
 		
 		# Изменяем размер если нужно
-		if overlay_image.get_width() != OVERLAY_TILE_SIZE or overlay_image.get_height() != OVERLAY_TILE_SIZE:
-			overlay_image.resize(OVERLAY_TILE_SIZE, OVERLAY_TILE_SIZE)
+		if overlay_image.get_width() != tile_size or overlay_image.get_height() != tile_size:
+			overlay_image.resize(tile_size, tile_size)
 		
-		# Вычисляем позицию в атласе (4x4 сетка)
-		var atlas_x = (overlay_index % OVERLAY_ATLAS_TILES) * OVERLAY_TILE_SIZE
-		var atlas_y = (overlay_index / OVERLAY_ATLAS_TILES) * OVERLAY_TILE_SIZE
+		# Вычисляем позицию в атласе
+		var atlas_x = (overlay_index % atlas_tiles) * tile_size
+		var atlas_y = (overlay_index / atlas_tiles) * tile_size
 		
 		# Копируем в атлас
-		atlas_image.blit_rect(overlay_image, Rect2i(0, 0, OVERLAY_TILE_SIZE, OVERLAY_TILE_SIZE), Vector2i(atlas_x, atlas_y))
+		atlas_image.blit_rect(overlay_image, Rect2i(0, 0, tile_size, tile_size), Vector2i(atlas_x, atlas_y))
 		
-		Logger.debug(TAG, "Added overlay texture %s to atlas at (%d, %d)" % [texture_path, atlas_x, atlas_y])
+		Logger.debug(TAG, "Added overlay texture for index %d to atlas at (%d, %d)" % [overlay_index, atlas_x, atlas_y])
 		loaded_overlays += 1
 	
 	Logger.info(TAG, "Created overlay atlas with %d overlay textures" % loaded_overlays)
@@ -471,4 +494,20 @@ func get_overlay_type_index(overlay_type: int) -> int:
 	"""
 	Возвращает индекс в атласе для типа оверлея
 	"""
+	if config:
+		# Конвертируем enum в строку для поиска в конфиге
+		var overlay_type_name = ""
+		match overlay_type:
+			BlockOverlay.OverlayType.GRASS:
+				overlay_type_name = "GRASS"
+			BlockOverlay.OverlayType.MOSS:
+				overlay_type_name = "MOSS"
+			BlockOverlay.OverlayType.SNOW:
+				overlay_type_name = "SNOW"
+			_:
+				overlay_type_name = "GRASS"  # По умолчанию
+		
+		return config.get_overlay_type_index(overlay_type_name)
+	
+	# Fallback к старому способу
 	return OVERLAY_TYPE_TO_INDEX.get(overlay_type, 0)  # 0 = базовая текстура по умолчанию

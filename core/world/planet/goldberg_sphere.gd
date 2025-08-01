@@ -1,16 +1,15 @@
 extends MeshInstance3D
 
 const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
+const TileUtils = preload("res://addons/deep_thought/core/world/planet/tile_utils.gd")
 
 # Сигналы для UI
-signal tile_selected(tile_data: Dictionary)
+signal tile_selected(tile_data: CustomTileData)
 signal tile_deselected()
 
 @export_group("Planet")
 @export var planet: Planet
 @export var planet_root: Node3D
-@export var subdivisions: int = 3
-@export var radius: float = 5.0
 
 @export_group("Camera")
 @export var camera_distance: float = 15.0
@@ -29,6 +28,17 @@ var hex_centers: PackedVector3Array = []
 var hex_neighbors: Dictionary = {}
 var hex_boundaries: Dictionary = {}
 
+# Геттеры для получения настроек из planet_config
+func get_subdivisions() -> int:
+	if planet and planet.config:
+		return planet.config.subdivisions
+	return 3  # Значение по умолчанию
+
+func get_radius() -> float:
+	if planet and planet.config:
+		return planet.config.radius
+	return 5.0  # Значение по умолчанию
+
 # Рендеринг
 var wireframe_mesh_instance: MeshInstance3D
 var face_to_tile: Dictionary = {}
@@ -45,8 +55,13 @@ var last_mouse_position := Vector2()
 # Отладка
 var debug_spheres: Array[MeshInstance3D] = []
 
+# Сигналы для асинхронной генерации
+signal generation_progress(progress: float, status: String)
+signal generation_completed()
+
 func _ready():
-	generate_correct_sphere()
+	# Убираем автоматическую генерацию - она будет запускаться извне
+	# generate_planet_async()
 	setup_camera()
 
 func setup_camera():
@@ -69,10 +84,49 @@ func update_camera_position():
 	camera.position = pos
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 
+func generate_planet_async():
+	Logger.info("WORLD", "Начало асинхронной генерации планеты...")
+	print("GoldbergSphere: Starting generation")
+	emit_signal("generation_progress", 0.0, "Инициализация генерации...")
+	
+	# Генерация геометрии
+	emit_signal("generation_progress", 0.2, "Генерация геометрии сферы Голдберга...")
+	var geometry_data = GoldbergGeometry.generate_goldberg_sphere_correct(get_subdivisions(), get_radius())
+	
+	# Генерация биомов
+	emit_signal("generation_progress", 0.5, "Генерация биомов...")
+	if planet:
+		planet.generate(geometry_data)
+	
+	# Сохранение данных
+	emit_signal("generation_progress", 0.7, "Сохранение данных планеты...")
+	hex_centers = geometry_data.hex_centers
+	hex_neighbors = geometry_data.hex_neighbors
+	hex_boundaries = geometry_data.hex_boundaries
+
+	Logger.info("WORLD", "Создано " + str(hex_centers.size()) + " гексагональных тайлов")
+
+	# Создание визуализации
+	emit_signal("generation_progress", 0.8, "Создание визуализации...")
+	create_hex_visualization()
+
+	if show_wireframe:
+		emit_signal("generation_progress", 0.9, "Создание каркаса...")
+		create_correct_wireframe()
+	
+	print("GoldbergSphere: Generation completed")
+	emit_signal("generation_progress", 1.0, "Генерация завершена!")
+	emit_signal("generation_completed")
+
+## Запуск асинхронной генерации извне
+func start_planet_generation() -> void:
+	# Запускаем генерацию в отдельном потоке или с задержками
+	call_deferred("generate_planet_async")
+
 func generate_correct_sphere():
 	Logger.info("WORLD", "Генерация правильной сферы Голдберга...")
 
-	var geometry_data = GoldbergGeometry.generate_goldberg_sphere_correct(subdivisions, radius)
+	var geometry_data = GoldbergGeometry.generate_goldberg_sphere_correct(get_subdivisions(), get_radius())
 	if planet:
 		planet.generate(geometry_data)
 
@@ -120,8 +174,11 @@ func create_hex_visualization():
 func _get_tile_color(hex_id: int) -> Color:
 	if planet and hex_id < planet.tiles.size():
 		var tile = planet.tiles[hex_id]
+		# Проверяем биом и обновляем цвет если нужно
 		if tile.biome:
-			return tile.biome.color
+			tile.biome_color = tile.biome.color
+			tile.biome_id = tile.biome.name
+		return tile.biome_color
 	return Color.MAGENTA
 
 func _add_hex_center_vertex(surface_tool: SurfaceTool, center: Vector3, color: Color, vertex_count: int) -> int:
@@ -171,7 +228,7 @@ func create_sphere_collision():
 	
 	var collider = CollisionShape3D.new()
 	var sphere_shape = SphereShape3D.new()
-	sphere_shape.radius = radius
+	sphere_shape.radius = get_radius()
 	collider.shape = sphere_shape
 	collider.name = "PlanetCollider"
 	
@@ -198,8 +255,8 @@ func create_correct_wireframe():
 			var current = boundary[i]
 			var next = boundary[(i + 1) % boundary.size()]
 
-			var pos1 = current.normalized() * (radius + wireframe_thickness)
-			var pos2 = next.normalized() * (radius + wireframe_thickness)
+			var pos1 = current.normalized() * (get_radius() + wireframe_thickness)
+			var pos2 = next.normalized() * (get_radius() + wireframe_thickness)
 
 			line_vertices.append(pos1)
 			line_vertices.append(pos2)
@@ -243,7 +300,7 @@ func highlight_tile_by_position(hit_position: Vector3):
 	var local_hit_position = to_local(hit_position)
 	
 	# Проецируем точку попадания на сферу для более точного определения
-	var projected_position = local_hit_position.normalized() * radius
+	var projected_position = local_hit_position.normalized() * get_radius()
 	
 	var closest_tile_id := _find_closest_tile(projected_position)
 	
@@ -324,25 +381,14 @@ func emit_tile_selected_signal(tile_id: int):
 		
 	var tile = planet.tiles[tile_id]
 	
-	# Собираем данные тайла в словарь
-	var tile_data = {
-		"id": tile_id,
-		"biome": tile.biome,
-		"biome_name": tile.biome.name if tile.biome else "None",
-		"biome_color": tile.biome.color if tile.biome else Color.MAGENTA,
-		"position": hex_centers[tile_id],
-		"neighbors": tile.neighbors,
-		"neighbor_count": tile.neighbors.size(),
-		"vertices": hex_boundaries[tile_id].size() if hex_boundaries.has(tile_id) else 0
-	}
+	# Обновляем данные тайла из геометрии
+	TileUtils.update_tile_from_geometry(tile, hex_centers, hex_neighbors, hex_boundaries)
 	
-	# Можно добавить дополнительные данные, например:
-	# "temperature": tile.temperature,
-	# "humidity": tile.humidity,
-	# "elevation": tile.elevation,
-	# и т.д.
+	# Обновляем цвет на основе биома
+	TileUtils.update_tile_color_from_biome(tile)
 	
-	tile_selected.emit(tile_data)
+	# Отправляем CustomTileData напрямую
+	tile_selected.emit(tile)
 
 func is_point_inside_tile(point: Vector3, tile_id: int) -> bool:
 	if not hex_boundaries.has(tile_id):
@@ -416,11 +462,10 @@ func restore_tile_color(tile_id: int):
 		return
 		
 	var tile = planet.tiles[tile_id]
-	var original_color = Color.MAGENTA
+	# Обновляем цвет биома если есть
 	if tile.biome:
-		original_color = tile.biome.color
-	
-	update_tile_color(tile_id, original_color)
+		tile.biome_color = tile.biome.color
+	update_tile_color(tile_id, tile.biome_color)
 
 func update_tile_color(tile_id: int, new_color: Color):
 	var array_mesh := mesh as ArrayMesh
@@ -452,17 +497,8 @@ func print_tile_info(tile_id: int):
 		return
 
 	var tile = planet.tiles[tile_id]
-	var biome_name = "None"
-	var biome_color = Color(1, 0, 1)
-	if tile.biome:
-		biome_name = tile.biome.name
-		biome_color = tile.biome.color
-
-	Logger.debug("WORLD", "Биом: " + str(biome_name))
-	Logger.debug("WORLD", "Цвет биома: " + str(biome_color))
-	Logger.debug("WORLD", "Позиция центра: " + str(hex_centers[tile_id]))
-	Logger.debug("WORLD", "Соседи: " + str(tile.neighbors))
-	Logger.debug("WORLD", "Количество соседей: " + str(tile.neighbors.size()))
+	
+	Logger.debug("WORLD", TileUtils.get_tile_info_string(tile))
 	
 	# Проверка границ
 	if hex_boundaries.has(tile_id):

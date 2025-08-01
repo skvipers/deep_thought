@@ -1,9 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b52ym621rftqm"]
+[gd_scene load_steps=5 format=3 uid="uid://b52ym621rftqm"]
 
-[ext_resource type="Script" uid="uid://d388pciulmdp" path="res://addons/deep_thought/core/world/chunk.gd" id="1_tb4fu"]
-[ext_resource type="Script" uid="uid://bbtmx0osan5yo" path="res://addons/deep_thought/core/world/chunk_renderer.gd" id="2_2cmyx"]
-[ext_resource type="Resource" uid="uid://dx3xll5yg56le" path="res://addons/deep_thought/data/resources/block_library.tres" id="3_6fr37"]
-[ext_resource type="Script" uid="uid://bbnffhhpo2nh3" path="res://addons/deep_thought/core/generator/map_buffer.gd" id="4_ue0jk"]
+[ext_resource type="Script" uid="uid://cy67edtkeuajc" path="res://addons/deep_thought/core/world/chunk.gd" id="1_tb4fu"]
+[ext_resource type="Script" uid="uid://bx4xoob3n3enu" path="res://addons/deep_thought/core/world/chunk_renderer.gd" id="2_2cmyx"]
+[ext_resource type="Script" uid="uid://dv5gkb50lo5fx" path="res://addons/deep_thought/core/generator/map_buffer.gd" id="4_ue0jk"]
 
 [sub_resource type="Resource" id="Resource_37at3"]
 script = ExtResource("4_ue0jk")
@@ -14,6 +13,5 @@ script = ExtResource("1_tb4fu")
 
 [node name="ChunkRenderer" type="Node3D" parent="."]
 script = ExtResource("2_2cmyx")
-block_library = ExtResource("3_6fr37")
 buffer = SubResource("Resource_37at3")
 debug_output = true
