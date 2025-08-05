@@ -51,6 +51,12 @@ func _enter_tree():
 	
 	add_custom_type("ChunkEditor", "Node", preload("res://addons/deep_thought/editor/chunk_editor.gd"), preload("res://icon.svg"))
 	add_custom_type("FlyCamera", "Camera3D", preload("res://addons/deep_thought/utils/fly_camera.gd"), preload("res://icon.svg"))
+	
+	# Добавляем BuildObjectData и CategoryData
+	add_custom_type("BuildObjectData", "Resource", preload("res://addons/deep_thought/core/build/build_object_data.gd"), preload("res://icon.svg"))
+	add_custom_type("CategoryData", "Resource", preload("res://addons/deep_thought/core/build/category_data.gd"), preload("res://icon.svg"))
+	add_custom_type("BuildGridVisualizer", "Node3D", preload("res://addons/deep_thought/core/build/build_grid_visualizer.gd"), preload("res://icon.svg"))
+	add_custom_type("GhostBuildObject", "Node3D", preload("res://addons/deep_thought/core/build/ghost_build_object.gd"), preload("res://icon.svg"))
 
 func _exit_tree():
 	# Удаляем типы ресурсов
@@ -100,3 +106,9 @@ func _exit_tree():
 	
 	remove_custom_type("ChunkEditor")
 	remove_custom_type("FlyCamera")
+	
+	# Удаляем BuildObjectData и CategoryData
+	remove_custom_type("BuildObjectData")
+	remove_custom_type("CategoryData")
+	remove_custom_type("BuildGridVisualizer")
+	remove_custom_type("GhostBuildObject")

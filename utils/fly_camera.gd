@@ -3,27 +3,44 @@ class_name FlyCamera
 
 @export var move_speed: float = 20.0
 @export var mouse_sensitivity: float = 0.002
+@export var zoom_sensitivity: float = 2.0
 @export var boost_multiplier: float = 3.0
 @export var input_enabled: bool = true
 
 var velocity := Vector3.ZERO
+var is_rotating: bool = false
 
 func _ready():
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Начинаем в режиме интерфейса (мышь свободна)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _input(event):
 	if not input_enabled:
 		return
-		
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	
+	# Обработка скролла для приближения/удаления
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			# Приближение
+			var forward = -transform.basis.z
+			position += forward * zoom_sensitivity
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			# Удаление
+			var forward = -transform.basis.z
+			position -= forward * zoom_sensitivity
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			# Начало/конец вращения
+			if event.pressed:
+				is_rotating = true
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			else:
+				is_rotating = false
+				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	
+	# Обработка вращения камеры при зажатом среднем колесике
+	if event is InputEventMouseMotion and is_rotating:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		rotate_object_local(Vector3.RIGHT, -event.relative.y * mouse_sensitivity)
-	
-	if event.is_action_pressed("ui_cancel"):
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		else:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta):
 	if not input_enabled:
@@ -31,7 +48,7 @@ func _physics_process(delta):
 		
 	var input_vector := Vector3.ZERO
 	
-	# Движение
+	# Движение WASD
 	if Input.is_action_pressed("move_forward"):
 		input_vector.z -= 1
 	if Input.is_action_pressed("move_backward"):
@@ -40,10 +57,6 @@ func _physics_process(delta):
 		input_vector.x -= 1
 	if Input.is_action_pressed("move_right"):
 		input_vector.x += 1
-	if Input.is_action_pressed("move_up"):
-		input_vector.y += 1
-	if Input.is_action_pressed("move_down"):
-		input_vector.y -= 1
 	
 	input_vector = input_vector.normalized()
 	

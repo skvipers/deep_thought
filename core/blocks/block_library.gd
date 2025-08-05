@@ -57,7 +57,7 @@ func get_block_id(name: StringName) -> int:
 	var block = blocks_by_name.get(name)
 	if block:
 		return block.id
-	return -1  # Возвращаем -1, если блок не найден
+	return -1  # Return -1, if block not found
 
 func get_block_by_id(id: int) -> BlockType:
 	ensure_initialized()
