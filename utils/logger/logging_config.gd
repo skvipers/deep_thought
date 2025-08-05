@@ -50,6 +50,12 @@ static func enable_test_logs() -> void:
 static func disable_test_logs() -> void:
 	Logger.disable_module("TEST")
 
+static func enable_game_logs() -> void:
+	Logger.enable_module("GAME")
+
+static func disable_game_logs() -> void:
+	Logger.disable_module("GAME")
+
 # Быстрые настройки для отладки
 static func debug_generation_only() -> void:
 	Logger.disable_all_modules()

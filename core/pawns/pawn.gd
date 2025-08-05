@@ -7,7 +7,7 @@ const PawnSkeletonData = preload("res://addons/deep_thought/core/pawns/skeleton/
 const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
 
 @export var config: PawnConfig
-@onready var visual := $Visual
+@export var visual: PawnVisual
 
 var stats: StatBlock
 var body: BodyStructure
@@ -55,53 +55,9 @@ func _initialize_task_system():
 	"""Initialize task system for this pawn"""
 	Logger.debug("PAWN", "Initializing task system")
 	
-	# Initialize default job priorities
-	job_priorities = {
-		"firefighter": 3,
-		"patient": 3,
-		"doctor": 3,
-		"rest": 3,
-		"work": 3,
-		"supervision": 3,
-		"animal_breeder": 3,
-		"cook": 3,
-		"hunter": 3,
-		"builder": 3,
-		"farmer": 3,
-		"miner": 3,
-		"lumberjack": 3,
-		"gardener": 3,
-		"tailor": 3,
-		"artist": 3,
-		"craftsman": 3,
-		"porter": 3,
-		"cleaner": 3,
-		"scientist": 3
-	}
-	
-	# Initialize default skill levels
-	skill_levels = {
-		"firefighter": 1,
-		"patient": 1,
-		"doctor": 1,
-		"rest": 1,
-		"work": 1,
-		"supervision": 1,
-		"animal_breeder": 1,
-		"cook": 1,
-		"hunter": 1,
-		"builder": 1,
-		"farmer": 1,
-		"miner": 1,
-		"lumberjack": 1,
-		"gardener": 1,
-		"tailor": 1,
-		"artist": 1,
-		"craftsman": 1,
-		"porter": 1,
-		"cleaner": 1,
-		"scientist": 1
-	}
+	# Initialize task system from config
+	job_priorities = config.default_job_priorities.duplicate()
+	skill_levels = config.default_skill_levels.duplicate()
 
 func _apply_prosthetics():
 	"""Apply prosthetics to body parts"""
@@ -263,7 +219,11 @@ func can_perform_job(job_type: String) -> bool:
 
 func is_healthy_enough() -> bool:
 	"""Check if pawn is healthy enough to work"""
-	var critical_parts = ["head", "torso"]
+	if not config:
+		Logger.warn("PAWN", "Cannot check health, no config available.")
+		return true
+		
+	var critical_parts = config.critical_parts
 	
 	for part_name in critical_parts:
 		if get_part_health(part_name) <= 0:

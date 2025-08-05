@@ -14,6 +14,10 @@ static var enabled_modules := {
 	"EDITOR": true,          # Редактор
 	"TEST": true,            # Тесты
 	"SYSTEM": true,          # Системные сообщения
+	"BUILD": true,           # Строительная система
+	"GHOST": true,           # Призраки построек
+	"OCCUPANCY": true,       # Проверка занятости
+	"GAME": true,            # Игровая логика
 	"DEFAULT": true          # По умолчанию
 }
 

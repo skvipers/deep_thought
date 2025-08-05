@@ -1,8 +1,27 @@
+#
+# TODO: Требуется рефакторинг для повышения гибкости.
+#
+# Текущая реализация имеет несколько проблем:
+# 1. Жестко закодированные пути в `preload()`: Зависимости (UnifiedBoneData, AttachmentData, Logger)
+#    загружаются с использованием полных путей `res://`. Это делает систему хрупкой
+#    к изменениям в структуре папок. Рекомендуется использовать `class_name` и 
+#    позволить Godot управлять зависимостями, либо передавать классы как параметры.
+# 2. Жестко закодированные пути к нодам и мешам: В методах, создающих скелеты (например,
+#    create_humanoid_skeleton), пути к нодам `Skeleton3D` и мешам заданы как строки.
+#    Это предполагает очень специфическую структуру сцены и ломается при ее изменении.
+# 3. Жестко закодированная конфигурация скелетов: Вся конфигурация для стандартных
+#    скелетов находится прямо в коде. Это делает невозможным простое добавление
+#    новых типов скелетов или изменение существующих без редактирования этого файла.
+#
+# Рекомендации по улучшению:
+# - Создать кастомный ресурс, например `SkeletonDataResource.gd`, который будет
+#   хранить всю информацию о скелете (список костей, пути к мешам, точки крепления).
+# - Для каждого типа скелета создать свой `.tres` файл на основе `SkeletonDataResource`.
+# - Изменить фабрику, чтобы она имела один общий метод, например
+#   `create_skeleton(skeleton_resource: SkeletonDataResource)`, который будет строить
+#   скелет на основе данных из переданного ресурса.
+#
 class_name SkeletonFactory
-
-const UnifiedBoneData = preload("res://addons/deep_thought/core/pawns/skeleton/unified_bone_data.gd")
-const AttachmentData = preload("res://addons/deep_thought/core/pawns/skeleton/attachment_data.gd")
-const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
 
 static func create_humanoid_skeleton() -> PawnSkeletonData:
 	"""Creates standard humanoid skeleton"""

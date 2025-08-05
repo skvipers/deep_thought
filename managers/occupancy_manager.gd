@@ -46,7 +46,8 @@ func _check_terrain_only(position: Vector3i, size: Vector3i) -> bool:
 		for y in range(position.y, position.y + size.y):
 			for z in range(position.z, position.z + size.z):
 				var check_pos = Vector3i(x, y, z)
-				if not terrain_grid.is_position_suitable(check_pos):
+				var block = terrain_grid.get_block_at(check_pos)
+				if block and block.is_solid:
 					return false
 	
 	return true
@@ -74,7 +75,11 @@ func _check_with_ceiling_allowed(position: Vector3i, size: Vector3i) -> bool:
 		for y in range(position.y, position.y + size.y):
 			for z in range(position.z, position.z + size.z):
 				var check_pos = Vector3i(x, y, z)
-				if not terrain_grid.is_position_suitable_with_ceiling(check_pos):
+				var block = terrain_grid.get_block_at(check_pos)
+				if block and block.is_solid:
+					# Allow placing on the ground, but not inside it
+					if y == position.y: # Assuming y is the vertical axis
+						continue
 					return false
 	
 	return true
@@ -96,14 +101,14 @@ func _is_terrain_position_suitable(position: Vector3i) -> bool:
 	if terrain_grid == null:
 		return true
 	
-	return terrain_grid.is_position_suitable(position)
+	return !terrain_grid.get_block_at(position).is_solid
 
 ## Checks position with ceiling consideration
 func _is_position_suitable_with_ceiling(position: Vector3i) -> bool:
 	if terrain_grid == null:
 		return true
 	
-	return terrain_grid.is_position_suitable_with_ceiling(position)
+	return !terrain_grid.get_block_at_at(position).is_solid
 
 ## Checks if object can be placed considering neighboring objects
 func _check_neighbor_requirements(position: Vector3i, size: Vector3i) -> bool:

@@ -3,8 +3,6 @@ class_name WorldPreview
 
 const TAG := "WorldPreview"
 const Logger = preload("res://addons/deep_thought/utils/logger/logger.gd")
-const OverlayManagerFactory = preload("res://addons/deep_thought/core/factories/OverlayManagerFactory.gd")
-const ChunkFactory = preload("res://addons/deep_thought/core/factories/ChunkFactory.gd")
 
 @export var context: GenerationContext
 @export var chunk_scene: PackedScene
@@ -75,7 +73,6 @@ func create_chunk_at(chunk_pos: Vector3i):
 			for z in range(chunk_size.z):
 				buffer.set_block(Vector3i(x, 0, z), 1)  # Блок типа 1 (земля)
 	
-	const ChunkFactory = preload("res://addons/deep_thought/core/factories/ChunkFactory.gd")
 	var chunk = ChunkFactory.create_chunk(chunk_scene)
 	add_child(chunk)
 	chunk.initialize(chunk_pos, chunk_size, buffer, context.block_library)
