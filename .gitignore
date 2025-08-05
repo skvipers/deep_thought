@@ -14,7 +14,6 @@ Thumbs.db
 *.swo
 
 # Build artifacts
-build/
 dist/
 *.exe
 *.dll
