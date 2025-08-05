@@ -100,9 +100,46 @@ func rebuild_mesh():
 	clear_existing_meshes()
 	Logger.debug(TAG, "Children after clearing: %d" % get_child_count())
 
+	# Create collision shape FIRST, based on ALL solid blocks, not just visible ones
+	create_collision_shape()
+
 	for texture_key in blocks_by_texture.keys():
 		var group = blocks_by_texture[texture_key]
 		create_mesh_for_texture_group(group, texture_key)
+
+func create_collision_shape():
+	var full_mesh_vertices = PackedVector3Array()
+	var full_mesh_indices = PackedInt32Array()
+	var vertex_count = 0
+
+	for pos in buffer.get_block_positions():
+		var block_id = buffer.get_block(pos)
+		var block = block_library.get_block_by_id(block_id)
+		if block != null and block.is_solid:
+			# For collision, we add all faces, not just visible ones
+			for direction_index in range(DIRECTIONS.size()):
+				add_face_geometry(pos, direction_index, Color.WHITE, full_mesh_vertices, PackedVector3Array(), PackedVector2Array(), PackedColorArray(), full_mesh_indices, vertex_count)
+				vertex_count += 4
+	
+	if full_mesh_vertices.size() > 0:
+		var collision_mesh = ArrayMesh.new()
+		var arrays = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = full_mesh_vertices
+		arrays[Mesh.ARRAY_INDEX] = full_mesh_indices
+		collision_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		
+		var static_body = StaticBody3D.new()
+		static_body.name = "CollisionBody"
+		static_body.collision_layer = 1
+		static_body.collision_mask = 1 # Respond to queries
+
+		var collision_shape = CollisionShape3D.new()
+		collision_shape.shape = collision_mesh.create_trimesh_shape()
+		static_body.add_child(collision_shape)
+		add_child(static_body)
+		Logger.debug(TAG, "Created collision shape with %d vertices" % full_mesh_vertices.size())
+
 
 func clear_existing_meshes():
 	for child in get_children():
@@ -183,29 +220,15 @@ func create_mesh_for_texture_group(group: Dictionary, texture_key):
 				material.vertex_color_use_as_albedo = true
 				material.cull_mode = BaseMaterial3D.CULL_BACK
 		
-		# Создаем StaticBody3D для коллизий
-		var static_body = StaticBody3D.new()
-		static_body.collision_layer = 1
-		static_body.collision_mask = 1
-		
-		# Создаем MeshInstance3D
+		# Создаем MeshInstance3D (без коллизии)
 		var mesh_instance = MeshInstance3D.new()
 		mesh_instance.mesh = array_mesh
 		mesh_instance.material_override = material
 		
-		# Создаем CollisionShape3D с формой из меша
-		var collision_shape = CollisionShape3D.new()
-		var trimesh_shape = array_mesh.create_trimesh_shape()
-		collision_shape.shape = trimesh_shape
-		
-		# Собираем иерархию: StaticBody3D -> MeshInstance3D + CollisionShape3D
-		static_body.add_child(mesh_instance)
-		static_body.add_child(collision_shape)
-		
 		# Добавляем к ChunkRenderer
-		add_child(static_body)
+		add_child(mesh_instance)
 		
-		Logger.debug(TAG, "Mesh created with %d vertices and collision shape" % vertices.size())
+		Logger.debug(TAG, "Mesh created with %d vertices" % vertices.size())
 		
 
 
@@ -243,9 +266,12 @@ func add_face_geometry(pos: Vector3i, direction_index: int, color: Color, vertic
 	var face_vertices = FACE_VERTICES[direction_index]
 	for i in range(4):
 		vertices.append(base_pos + face_vertices[i])
-		normals.append(direction_vector)
-		uvs.append(FACE_UVS[i])
-		colors.append(color)
+		if normals != null:
+			normals.append(direction_vector)
+		if uvs != null:
+			uvs.append(FACE_UVS[i])
+		if colors != null:
+			colors.append(color)
 	var v0 = start_vertex_index
 	var v1 = start_vertex_index + 1
 	var v2 = start_vertex_index + 2
